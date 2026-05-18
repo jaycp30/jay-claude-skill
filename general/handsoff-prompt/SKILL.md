@@ -1,12 +1,12 @@
 ---
 name: handoff-prompt
 description: >
-  Generates a structured handoff.md file to preserve session context across Claude Code sessions.
+  Generates a structured handoff file to preserve session context across Claude Code sessions.
   Use this skill whenever the user wants to end a Claude Code session and continue later without
   losing context, says things like "wrap up this session", "save our progress", "create a handoff",
   "end session", "I'll continue later", or asks how to pick up where they left off in a new session.
-  Also trigger when the user wants to resume work from a previous session and mentions a handoff.md
-  file, or asks Claude to "read handoff.md and continue". This skill is essential for any multi-session
+  Also trigger when the user wants to resume work from a previous session and mentions a handoff file,
+  or asks Claude to "read handoff and continue". This skill is essential for any multi-session
   development workflow in Claude Code.
 ---
 
@@ -14,16 +14,18 @@ description: >
 
 This skill handles two directions of a session handoff workflow in Claude Code:
 
-1. **Ending a session**: Writing a `handoff.md` that captures all context before clearing
-2. **Starting a session**: Reading `handoff.md` and resuming exactly where the last session left off
+1. **Ending a session**: Writing a timestamped `handoff_YYYYMMDDHHMMSS.md` that captures all context before clearing
+2. **Starting a session**: Reading the most recent handoff file and resuming exactly where the last session left off
 
 ---
 
 ## When the user wants to END a session
 
-Generate a `handoff.md` file in the project root. The file must capture:
+Generate a handoff file in the project root. The filename must include a timestamp suffix using the current date and time at the moment of file creation, in the format `handoff_YYYYMMDDHHMMSS.md` — for example, `handoff_20260518143022.md`. Get the current timestamp from the system (e.g. via `date +%Y%m%d%H%M%S` in bash, or equivalent) — never hardcode or guess it.
 
-### handoff.md Structure
+The file must capture:
+
+### File structure
 
 ```markdown
 # Goal
@@ -56,28 +58,30 @@ Generate a `handoff.md` file in the project root. The file must capture:
 
 ### After writing the file
 
-Tell the user:
+Tell the user the exact filename that was created, then say:
 
 ```
-handoff.md is ready. To continue in a fresh session:
+handoff_YYYYMMDDHHMMSS.md is ready. To continue in a fresh session:
 
 1. Run /clear to end this session
-2. In the new session, paste: Read handoff.md and pick up from exactly where it left off.
+2. In the new session, paste: Read handoff_YYYYMMDDHHMMSS.md and pick up from exactly where it left off.
 ```
+
+(Replace YYYYMMDDHHMMSS with the actual timestamp in both places.)
 
 ---
 
 ## When the user wants to START from a handoff
 
-If the user says something like "read handoff.md and continue" or starts a session referencing a handoff file:
+If the user says something like "read handoff and continue" or starts a session referencing a handoff file:
 
-1. Read `handoff.md` from the project root
-2. Confirm you've loaded it by briefly stating: the goal, current state, and the next step
-3. Proceed immediately with the next step — do not ask for confirmation unless something is ambiguous or the next step is destructive
+1. If the user specifies a filename, read that file. If they don't, look for all `handoff_*.md` files in the project root and read the most recent one (highest timestamp).
+2. Confirm you've loaded it by briefly stating: the filename, the goal, current state, and the next step.
+3. Proceed immediately with the next step — do not ask for confirmation unless something is ambiguous or the next step is destructive.
 
 Example confirmation format:
 ```
-Picked up from handoff.md.
+Picked up from handoff_20260518143022.md.
 Goal: [goal]
 State: [current state in one line]
 Resuming: [next step]
@@ -93,3 +97,4 @@ Then get to work.
 - If there are no failed attempts in the session, write "None this session" — don't omit the section.
 - The file should be written to the project root, not a subdirectory.
 - Keep the file human-readable. Another developer (or a future Claude session) should be able to skim it in under 60 seconds.
+- The timestamp suffix means multiple handoff files can coexist safely. When resuming without a specific filename, always pick the most recent one.
