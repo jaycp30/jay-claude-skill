@@ -5,6 +5,7 @@ Notes and how-to for using Obsidian as a Markdown knowledge base that AI coding 
 
 ## Contents
 - [obsidian-for-claude-codex.md](obsidian-for-claude-codex.md) — full setup + upskilling guide (install → vault → GitHub).
+- [obsidian-skills.md](obsidian-skills.md) — the 4 Claude skills installed with the vault (markdown, bases, canvas, CLI).
 - [obsidian-glossary.md](obsidian-glossary.md) — Obsidian / PKM acronyms and terms.
 - [vault-CLAUDE.md](vault-CLAUDE.md) — example house-rules file for a vault.
 - [welcome.md](welcome.md) — example vault home note.
